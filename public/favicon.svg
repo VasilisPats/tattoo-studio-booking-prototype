@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Dark background -->
+  <rect width="64" height="64" fill="#0a0a0a"/>
+
+  <!-- Tattoo needle — body (thin vertical rectangle) -->
+  <rect x="30" y="8" width="4" height="32" rx="2" fill="#f0ebe0"/>
+
+  <!-- Needle tip (triangle pointing down) -->
+  <polygon points="32,52 29.5,40 34.5,40" fill="#f0ebe0"/>
+
+  <!-- Needle handle cap (wider top) -->
+  <rect x="27" y="6" width="10" height="5" rx="2.5" fill="#f0ebe0"/>
+
+  <!-- Ink drop — small amber dot below tip -->
+  <ellipse cx="32" cy="57" rx="2.2" ry="3" fill="#c9a84c" opacity="0.9"/>
+</svg>

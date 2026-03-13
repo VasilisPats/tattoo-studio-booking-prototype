@@ -1,0 +1,62 @@
+name: Create Project Labels
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              // Type labels (skip bug, enhancement, documentation — they already exist)
+              { name: 'design', color: 'C5DEF5', description: 'Visual / UX change with no logic impact' },
+              { name: 'chore', color: 'E4E669', description: 'Maintenance, CI, configs, dependencies' },
+              { name: 'refactor', color: 'FBCA04', description: 'Code cleanup without logic change' },
+              // Priority labels
+              { name: 'urgent', color: 'B60205', description: 'Blocks launch or breaks production' },
+              { name: 'high priority', color: 'D93F0B', description: 'Must be done in the current milestone' },
+              { name: 'medium priority', color: 'FBCA04', description: 'Should be done soon, not blocking' },
+              { name: 'low priority', color: '0E8A16', description: 'Nice to have' },
+              // Area labels
+              { name: 'hero', color: 'BFD4F2', description: 'Hero section' },
+              { name: 'nav', color: 'BFD4F2', description: 'Navigation / header' },
+              { name: 'portfolio', color: 'BFD4F2', description: 'Portfolio / gallery section' },
+              { name: 'booking', color: 'BFD4F2', description: 'Book-your-session flow' },
+              { name: 'process', color: 'BFD4F2', description: 'Process section' },
+              { name: 'i18n', color: 'BFD4F2', description: 'Internationalization (EL / EN)' },
+              { name: 'seo', color: 'BFD4F2', description: 'SEO and meta tags' },
+              { name: 'performance', color: 'BFD4F2', description: 'Performance optimization' },
+              { name: 'accessibility', color: 'BFD4F2', description: 'Accessibility improvements' },
+              { name: 'infra', color: 'BFD4F2', description: 'Build, deploy, CI/CD' },
+              // Status labels
+              { name: 'ready', color: '0E8A16', description: 'Fully specified, ready to work on' },
+              { name: 'in-progress', color: 'FBCA04', description: 'An agent or dev is actively working on it' },
+              { name: 'blocked', color: 'D73A4A', description: 'Waiting on external input or dependency' },
+              { name: 'review', color: '1D76DB', description: 'Implementation done, needs human review' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+                console.log(`✅ Created: ${label.name}`);
+              } catch (error) {
+                if (error.status === 422) {
+                  console.log(`⏭️ Already exists: ${label.name}`);
+                } else {
+                  console.log(`❌ Failed: ${label.name} — ${error.message}`);
+                }
+              }
+            }
+            console.log('Done!');
