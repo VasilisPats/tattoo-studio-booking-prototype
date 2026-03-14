@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const FloatingCTA = () => {
@@ -9,13 +9,11 @@ const FloatingCTA = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            const heroBottom = window.innerHeight;
-            const bookingEl = document.getElementById("booking");
-            const bookingTop = bookingEl
-                ? bookingEl.getBoundingClientRect().top
-                : Infinity;
+            const heroEl = document.getElementById("hero");
+            const heroBottom = heroEl ? heroEl.getBoundingClientRect().bottom : window.innerHeight;
 
-            setVisible(window.scrollY > heroBottom && bookingTop > window.innerHeight * 0.8);
+            // Show when the hero section (which contains the form) is out of view
+            setVisible(heroBottom < 100);
         };
 
         window.addEventListener("scroll", handleScroll, { passive: true });
@@ -27,7 +25,7 @@ const FloatingCTA = () => {
         <AnimatePresence>
             {visible && (
                 <motion.a
-                    href="#booking"
+                    href="#hero"
                     initial={{ opacity: 0, y: 20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -37,7 +35,7 @@ const FloatingCTA = () => {
                     className="fixed bottom-8 right-8 z-50 flex items-center gap-2 px-6 py-3.5 bg-primary text-primary-foreground text-sm tracking-[0.12em] uppercase font-medium shadow-lg shadow-primary/20"
                 >
                     <span>{t.floatingCta}</span>
-                    <ArrowDown size={14} className="animate-bounce" />
+                    <ArrowUp size={14} className="animate-bounce" />
 
                     <span className="absolute inset-0 border border-primary/30 animate-ping opacity-20 pointer-events-none" />
                 </motion.a>

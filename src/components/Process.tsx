@@ -52,7 +52,7 @@ const Process = () => {
             }`}
         >
           <motion.a
-            href="#booking"
+            href="#hero"
             className="inline-block px-10 py-4 bg-primary text-primary-foreground text-sm tracking-[0.15em] uppercase font-medium hover:opacity-90 transition-opacity duration-300"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
@@ -60,6 +60,7 @@ const Process = () => {
           >
             {t.process.cta}
           </motion.a>
+
         </div>
       </div>
     </section>
