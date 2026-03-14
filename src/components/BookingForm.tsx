@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Check, Upload, X, Image } from "lucide-react";
+import { ChevronRight, ChevronLeft, Check, Upload, X, Image, Loader2 } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import { el as elLocale } from "date-fns/locale";
@@ -11,8 +11,10 @@ import InkSplash from "./InkSplash";
 import TextReveal from "./TextReveal";
 import StyleQuiz, { type QuizData } from "./quiz/StyleQuiz";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useBookingSubmit } from "@/hooks/useBookingSubmit";
+import { InlineWidget } from "react-calendly";
 
-const TOTAL_FORM_STEPS = 5; // 0:Contact, 1:Date, 2:Idea+Photos, 3:Details, 4:Review
+const TOTAL_FORM_STEPS = 6; // 0:Contact, 1:Date, 2:Idea+Photos, 3:Details, 4:Review, 5:Scheduling
 
 interface BookingFormProps {
   variant?: "default" | "hero";
@@ -33,6 +35,8 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     style: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [supabaseBookingId, setSupabaseBookingId] = useState<string | null>(null);
+  const { submitBooking, isSubmitting } = useBookingSubmit();
   const { ref, isVisible } = useScrollAnimation();
   const { t, language } = useLanguage();
   const dateLocale = language === "el" ? elLocale : enLocale;
@@ -73,7 +77,21 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     }
     setStep((s) => s - 1);
   };
-  const submit = () => { if (validateStep()) setSubmitted(true); };
+  const submit = async () => { 
+    if (!validateStep()) return;
+    
+    // Safety Save to Supabase
+    const result = await submitBooking({
+      ...form,
+      preferredDate,
+      quizData
+    }, referenceImages);
+
+    if (result) {
+      setSupabaseBookingId(result.id);
+      setStep(5); // Move to Calendly
+    }
+  };
 
   const handleQuizComplete = (data: QuizData) => {
     setQuizData(data);
@@ -344,85 +362,133 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 4: Review */}
-              {step === 4 && (
-                <div className="space-y-6">
-                  <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.reviewTitle}</h3>
-                  <div className="space-y-3 text-sm">
-                    {[
-                      [t.booking.reviewLabels.name, form.name],
-                      [t.booking.reviewLabels.email, form.email],
-                      [t.booking.reviewLabels.phone, form.phone],
-                      ...(form.style ? [[t.booking.reviewLabels.style, form.style]] : []),
-                      [t.booking.reviewLabels.date, preferredDate ? format(preferredDate, "d MMMM yyyy", { locale: dateLocale }) : "—"],
-                      [t.booking.reviewLabels.placement, form.placement],
-                      [t.booking.reviewLabels.size, form.size],
-                      [t.booking.reviewLabels.budget, form.budget],
-                      [t.booking.reviewLabels.artist, form.artist || t.booking.noPreference],
-                    ].map(([label, val]) => (
-                      <div key={label} className="flex justify-between border-b border-border pb-2">
-                        <span className="text-muted-foreground">{label}</span>
-                        <span className="text-foreground">{val}</span>
-                      </div>
-                    ))}
-                    <div className="pt-2">
-                      <p className="text-muted-foreground mb-1">{t.booking.reviewLabels.idea}</p>
-                      <p className="text-foreground">{form.idea}</p>
-                    </div>
-                    {referenceImages.length > 0 && (
-                      <div className="pt-2">
-                        <p className="text-muted-foreground mb-2">{t.booking.reviewLabels.referenceImages}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {referenceImages.map((file, i) => (
-                            <div key={`review-${file.name}-${i}`} className="flex items-center gap-1.5 px-2.5 py-1 bg-secondary/50 border border-border text-xs text-foreground">
-                              <Image className="w-3 h-3 text-muted-foreground" />
-                              {file.name.length > 20 ? file.name.slice(0, 17) + "..." : file.name}
-                            </div>
-                          ))}
+                  {/* Step 4: Review */}
+                  {step === 4 && (
+                    <div className="space-y-6">
+                      <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.reviewTitle}</h3>
+                      <div className="space-y-3 text-sm">
+                        {[
+                          [t.booking.reviewLabels.name, form.name],
+                          [t.booking.reviewLabels.email, form.email],
+                          [t.booking.reviewLabels.phone, form.phone],
+                          ...(form.style ? [[t.booking.reviewLabels.style, form.style]] : []),
+                          [t.booking.reviewLabels.date, preferredDate ? format(preferredDate, "d MMMM yyyy", { locale: dateLocale }) : "—"],
+                          [t.booking.reviewLabels.placement, form.placement],
+                          [t.booking.reviewLabels.size, form.size],
+                          [t.booking.reviewLabels.budget, form.budget],
+                          [t.booking.reviewLabels.artist, form.artist || t.booking.noPreference],
+                        ].map(([label, val]) => (
+                          <div key={label} className="flex justify-between border-b border-border pb-2">
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className="text-foreground">{val}</span>
+                          </div>
+                        ))}
+                        <div className="pt-2">
+                          <p className="text-muted-foreground mb-1">{t.booking.reviewLabels.idea}</p>
+                          <p className="text-foreground">{form.idea}</p>
                         </div>
+                        {referenceImages.length > 0 && (
+                          <div className="pt-2">
+                            <p className="text-muted-foreground mb-2">{t.booking.reviewLabels.referenceImages}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {referenceImages.map((file, i) => (
+                                <div key={`review-${file.name}-${i}`} className="flex items-center gap-1.5 px-2.5 py-1 bg-secondary/50 border border-border text-xs text-foreground">
+                                  <Image className="w-3 h-3 text-muted-foreground" />
+                                  {file.name.length > 20 ? file.name.slice(0, 17) + "..." : file.name}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                    </div>
+                  )}
+
+                  {/* Step 5: Scheduling (Calendly) */}
+                  {step === 5 && (
+                    <div className="space-y-6">
+                      <div className="text-center space-y-2 mb-4">
+                        <h3 className="font-serif text-2xl text-foreground">{t.booking.scheduleTitle || "Finalize Your Slot"}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {t.booking.scheduleSubtitle || "Your details are saved. Pick a specific time below to lock it in."}
+                        </p>
+                      </div>
+                      
+                      <div className="calendly-container min-h-[400px] border border-border bg-secondary/20">
+                        <InlineWidget 
+                          url="https://calendly.com/your-calendly-link" // User needs to provide this
+                          prefill={{
+                            email: form.email,
+                            name: form.name,
+                            customAnswers: {
+                              a1: supabaseBookingId || "" // Store Supabase ID in Calendly for linking
+                            }
+                          }}
+                          styles={{
+                            height: '400px'
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="text-center pt-4">
+                        <button 
+                          onClick={() => setSubmitted(true)}
+                          className="text-primary text-xs uppercase tracking-widest hover:underline"
+                        >
+                          {t.booking.skipScheduling || "I'll schedule later"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
               </motion.div>
             </AnimatePresence>
 
             {/* Navigation */}
-            <div className={`flex justify-between ${isHero ? "mt-8" : "mt-10"}`}>
-              {step > 0 || quizData ? (
-                <motion.button
-                  onClick={prev}
-                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground transition-colors"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <ChevronLeft size={16} /> {t.booking.back}
-                </motion.button>
-              ) : <div />}
-              {step < TOTAL_FORM_STEPS - 1 ? (
-                <motion.button
-                  onClick={next}
-                  className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  {t.booking.next} <ChevronRight size={16} />
-                </motion.button>
-              ) : (
-                <motion.button
-                  onClick={submit}
-                  className="px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  {t.booking.submit}
-                </motion.button>
-              )}
-            </div>
+            {step < 5 && (
+              <div className={`flex justify-between ${isHero ? "mt-8" : "mt-10"}`}>
+                {step > 0 || quizData ? (
+                  <motion.button
+                    onClick={prev}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground transition-colors disabled:opacity-50"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <ChevronLeft size={16} /> {t.booking.back}
+                  </motion.button>
+                ) : <div />}
+                {step < TOTAL_FORM_STEPS - 2 ? (
+                  <motion.button
+                    onClick={next}
+                    className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    {t.booking.next} <ChevronRight size={16} />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    onClick={submit}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      t.booking.submit
+                    )}
+                  </motion.button>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}
