@@ -12,9 +12,9 @@ import TextReveal from "./TextReveal";
 import StyleQuiz, { type QuizData } from "./quiz/StyleQuiz";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
-import { InlineWidget } from "react-calendly";
+import { InlineWidget, useCalendlyEventListener } from "react-calendly";
 
-const TOTAL_FORM_STEPS = 6; // 0:Contact, 1:Date, 2:Idea+Photos, 3:Details, 4:Review, 5:Scheduling
+const TOTAL_FORM_STEPS = 5; // 0:Contact, 1:Idea+Photos, 2:Details, 3:Review, 4:Scheduling
 
 interface BookingFormProps {
   variant?: "default" | "hero";
@@ -26,7 +26,6 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   const [submitted, setSubmitted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
-  const [preferredDate, setPreferredDate] = useState<Date | undefined>(undefined);
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
@@ -36,10 +35,9 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [supabaseBookingId, setSupabaseBookingId] = useState<string | null>(null);
-  const { submitBooking, isSubmitting } = useBookingSubmit();
+  const { submitBooking, finalizeBooking, isSubmitting } = useBookingSubmit();
   const { ref, isVisible } = useScrollAnimation();
   const { t, language } = useLanguage();
-  const dateLocale = language === "el" ? elLocale : enLocale;
 
   const update = (field: string, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
@@ -55,13 +53,10 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
       if (!form.phone.trim()) errs.phone = t.booking.errors.phoneRequired;
     }
     if (step === 1) {
-      if (!preferredDate) errs.date = t.booking.errors.dateRequired;
-    }
-    if (step === 2) {
       if (!form.idea.trim()) errs.idea = t.booking.errors.ideaRequired;
       if (!form.placement) errs.placement = t.booking.errors.placementRequired;
     }
-    if (step === 3) {
+    if (step === 2) {
       if (!form.size) errs.size = t.booking.errors.sizeRequired;
       if (!form.budget) errs.budget = t.booking.errors.budgetRequired;
     }
@@ -83,13 +78,12 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     // Safety Save to Supabase
     const result = await submitBooking({
       ...form,
-      preferredDate,
       quizData
     }, referenceImages);
 
     if (result) {
       setSupabaseBookingId(result.id);
-      setStep(5); // Move to Calendly
+      setStep(4); // Move to Calendly
     }
   };
 
@@ -104,6 +98,19 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     setQuizComplete(true);
     setStep(0);
   };
+
+  // Calendly Event Listener
+  useCalendlyEventListener({
+    onEventScheduled: async (e) => {
+      console.log("Calendly Event Scheduled:", e.data.payload);
+      if (supabaseBookingId) {
+        const success = await finalizeBooking(supabaseBookingId, e.data.payload);
+        if (success) {
+          setSubmitted(true);
+        }
+      }
+    },
+  });
 
   // File upload handlers
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,46 +223,8 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 1: Preferred Date */}
+              {/* Step 1: Idea + Reference Photos (Previously Step 2) */}
               {step === 1 && (
-                <div className="space-y-6">
-                  <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.dateTitle}</h3>
-                  <div className="flex justify-center">
-                    <DayPicker
-                      mode="single"
-                      selected={preferredDate}
-                      onSelect={setPreferredDate}
-                      locale={dateLocale}
-                      disabled={[
-                        { before: new Date() },
-                        { dayOfWeek: [0] },
-                      ]}
-                      modifiersClassNames={{
-                        selected: "rdp-day_selected",
-                        today: "rdp-day_today",
-                      }}
-                      styles={{
-                        caption: { fontFamily: "'Cormorant Garamond', serif", fontSize: "1.1rem" },
-                        head_cell: { fontSize: "0.75rem", color: "hsl(var(--muted-foreground))", fontWeight: 400 },
-                        cell: { fontSize: "0.85rem" },
-                        day: {
-                          borderRadius: "0",
-                          transition: "all 0.2s",
-                        },
-                      }}
-                    />
-                  </div>
-                  {preferredDate && (
-                    <p className="text-center text-sm text-foreground">
-                      {t.booking.dateSelection} <span className="font-serif text-base">{format(preferredDate, "EEEE, d MMMM yyyy", { locale: dateLocale })}</span>
-                    </p>
-                  )}
-                  {errors.date && <p className={`${errorCls} text-center`}>{errors.date}</p>}
-                </div>
-              )}
-
-              {/* Step 2: Idea + Reference Photos */}
-              {step === 2 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.ideaTitle}</h3>
                   <div>
@@ -327,8 +296,8 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 3: Details */}
-              {step === 3 && (
+              {/* Step 2: Details (Previously Step 3) */}
+              {step === 2 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.detailsTitle}</h3>
                   {quizData ? (
@@ -362,50 +331,49 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-                  {/* Step 4: Review */}
-                  {step === 4 && (
-                    <div className="space-y-6">
-                      <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.reviewTitle}</h3>
-                      <div className="space-y-3 text-sm">
-                        {[
-                          [t.booking.reviewLabels.name, form.name],
-                          [t.booking.reviewLabels.email, form.email],
-                          [t.booking.reviewLabels.phone, form.phone],
-                          ...(form.style ? [[t.booking.reviewLabels.style, form.style]] : []),
-                          [t.booking.reviewLabels.date, preferredDate ? format(preferredDate, "d MMMM yyyy", { locale: dateLocale }) : "—"],
-                          [t.booking.reviewLabels.placement, form.placement],
-                          [t.booking.reviewLabels.size, form.size],
-                          [t.booking.reviewLabels.budget, form.budget],
-                          [t.booking.reviewLabels.artist, form.artist || t.booking.noPreference],
-                        ].map(([label, val]) => (
-                          <div key={label} className="flex justify-between border-b border-border pb-2">
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className="text-foreground">{val}</span>
-                          </div>
-                        ))}
-                        <div className="pt-2">
-                          <p className="text-muted-foreground mb-1">{t.booking.reviewLabels.idea}</p>
-                          <p className="text-foreground">{form.idea}</p>
-                        </div>
-                        {referenceImages.length > 0 && (
-                          <div className="pt-2">
-                            <p className="text-muted-foreground mb-2">{t.booking.reviewLabels.referenceImages}</p>
-                            <div className="flex flex-wrap gap-2">
-                              {referenceImages.map((file, i) => (
-                                <div key={`review-${file.name}-${i}`} className="flex items-center gap-1.5 px-2.5 py-1 bg-secondary/50 border border-border text-xs text-foreground">
-                                  <Image className="w-3 h-3 text-muted-foreground" />
-                                  {file.name.length > 20 ? file.name.slice(0, 17) + "..." : file.name}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+              {/* Step 3: Review (Previously Step 4) */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.reviewTitle}</h3>
+                  <div className="space-y-3 text-sm">
+                    {[
+                      [t.booking.reviewLabels.name, form.name],
+                      [t.booking.reviewLabels.email, form.email],
+                      [t.booking.reviewLabels.phone, form.phone],
+                      ...(form.style ? [[t.booking.reviewLabels.style, form.style]] : []),
+                      [t.booking.reviewLabels.placement, form.placement],
+                      [t.booking.reviewLabels.size, form.size],
+                      [t.booking.reviewLabels.budget, form.budget],
+                      [t.booking.reviewLabels.artist, form.artist || t.booking.noPreference],
+                    ].map(([label, val]) => (
+                      <div key={label} className="flex justify-between border-b border-border pb-2">
+                        <span className="text-muted-foreground">{label}</span>
+                        <span className="text-foreground">{val}</span>
                       </div>
+                    ))}
+                    <div className="pt-2">
+                      <p className="text-muted-foreground mb-1">{t.booking.reviewLabels.idea}</p>
+                      <p className="text-foreground">{form.idea}</p>
                     </div>
-                  )}
+                    {referenceImages.length > 0 && (
+                      <div className="pt-2">
+                        <p className="text-muted-foreground mb-2">{t.booking.reviewLabels.referenceImages}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {referenceImages.map((file, i) => (
+                            <div key={`review-${file.name}-${i}`} className="flex items-center gap-1.5 px-2.5 py-1 bg-secondary/50 border border-border text-xs text-foreground">
+                              <Image className="w-3 h-3 text-muted-foreground" />
+                              {file.name.length > 20 ? file.name.slice(0, 17) + "..." : file.name}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-                  {/* Step 5: Scheduling (Calendly) */}
-                  {step === 5 && (
+              {/* Step 4: Scheduling (Calendly) (Previously Step 5) */}
+              {step === 4 && (
                     <div className="space-y-6">
                       <div className="text-center space-y-2 mb-4">
                         <h3 className="font-serif text-2xl text-foreground">{t.booking.scheduleTitle || "Finalize Your Slot"}</h3>
@@ -416,16 +384,19 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                       
                       <div className="calendly-container min-h-[400px] border border-border bg-secondary/20">
                         <InlineWidget 
-                          url="https://calendly.com/your-calendly-link" // User needs to provide this
+                          url="https://calendly.com/your-calendly-link" // TODO: Add actual studio link
                           prefill={{
                             email: form.email,
                             name: form.name,
-                            customAnswers: {
-                              a1: supabaseBookingId || "" // Store Supabase ID in Calendly for linking
-                            }
+                          }}
+                          utm={{
+                            utmSource: "tattoo_studio_app",
+                            utmMedium: "booking_flow",
+                            utmCampaign: supabaseBookingId || "new_booking",
+                            utmContent: `${window.location.origin}/ref/${supabaseBookingId}`
                           }}
                           styles={{
-                            height: '400px'
+                            height: '600px'
                           }}
                         />
                       </div>
@@ -445,7 +416,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
             </AnimatePresence>
 
             {/* Navigation */}
-            {step < 5 && (
+            {step < 4 && (
               <div className={`flex justify-between ${isHero ? "mt-8" : "mt-10"}`}>
                 {step > 0 || quizData ? (
                   <motion.button

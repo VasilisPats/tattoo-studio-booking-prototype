@@ -93,5 +93,30 @@ export const useBookingSubmit = () => {
     }
   };
 
-  return { submitBooking, isSubmitting, error };
+  const finalizeBooking = async (bookingId: string, eventData: any) => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          status: 'scheduled',
+          scheduled_at: eventData.start_time,
+          calendly_payload: eventData
+        })
+        .eq('id', bookingId);
+
+      if (updateError) throw updateError;
+      return true;
+    } catch (err: any) {
+      console.error("Error finalizing booking:", err);
+      setError(err.message || "Failed to sync your appointment.");
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return { submitBooking, finalizeBooking, isSubmitting, error };
 };
