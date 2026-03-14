@@ -29,6 +29,7 @@
   - **The Pass-Off**: Open Calendly Inline Widget with the `booking_id` passed as a hidden pre-fill value.
   - **Browser-Side Listener**: Use the Calendly Event Listener to detect successful booking confirmation without needing complex webhooks.
   - **Final Sync**: On confirmation, update the Supabase record with the final date/time and update status to `scheduled`.
+  - **Production Config**: Replace placeholder URL in `BookingForm.tsx` with the actual studio link.
 - [x] **Phase D: The Artist Gallery (Utility Page)**:
   - **One-Tap Access**: Dedicated `/ref/:bookingId` route for artists.
   - **Calendar Injection**: The link is automatically included in the Calendly event notes.
