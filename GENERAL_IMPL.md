@@ -7,10 +7,10 @@
 
 ## 1. Booking Form Repositioning
 
-- [ ] Move the booking form into the Hero section (right side, next to business name)
-- [ ] Replace the main image placeholder with the form
-- [ ] Ensure responsive layout (stacks on mobile)
-- [ ] Validate the form still functions correctly in its new position
+- [x] Move the booking form into the Hero section (right side, next to business name)
+- [x] Replace the main image placeholder with the form
+- [x] Ensure responsive layout (stacks on mobile)
+- [x] Validate the form still functions correctly in its new position
 
 ---
 
@@ -68,15 +68,15 @@
 
 ## 7. Hero Form Concept: Glass Liquid Hybrid
 
-- [ ] Combine **Glassmorphism** with **Liquid Flow** transitions
-- [ ] Implement a floating glassmorphic card (backdrop-blur, transparency)
-- [ ] Replace the Hero image placeholder with the new form card
-- [ ] Develop the "Ink Wipe" transition effect for multi-step reveals
-- [ ] **Mobile Strategy**: Headline -> Description -> CTA Button -> Form
-- [ ] Ensure the CTA button acts as a trigger/focus to the form on small screens
-- [ ] Optimize form layout to be full-width on mobile for better accessibility
+- [x] Combine **Glassmorphism** with **Liquid Flow** transitions
+- [x] Implement a floating glassmorphic card (backdrop-blur, transparency)
+- [x] Replace the Hero image placeholder with the new form card
+- [x] Develop the "Ink Wipe" transition effect for multi-step reveals
+- [x] **Mobile Strategy**: Headline -> Description -> CTA Button -> Form
+- [x] Ensure the CTA button acts as a trigger/focus to the form on small screens
+- [x] Optimize form layout to be full-width on mobile for better accessibility
 
 ---
 
-> **Last updated**: 2026-03-13
+> **Last updated**: 2026-03-14
 > **Maintained by**: VasilisPats
