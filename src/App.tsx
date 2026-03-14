@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/react";
 import LoadingScreen from "@/components/LoadingScreen";
 import InkCursor from "@/components/InkCursor";
 import Index from "./pages/Index";
+import ArtistGallery from "./pages/ArtistGallery";
 import NotFound from "./pages/NotFound";
 import SentryDebugButton from "./components/SentryDebugButton";
 
@@ -45,6 +46,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/ref/:bookingId" element={<ArtistGallery />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
