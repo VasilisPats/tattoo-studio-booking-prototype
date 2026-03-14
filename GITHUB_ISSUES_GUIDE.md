@@ -1,8 +1,8 @@
-# GitHub Issues Guide — Artisan Studio Showcase
+# GitHub Issues Guide — Tattoo Studio Booking Prototype
 
 > **Purpose**: This document defines the rules every AI agent (and human contributor) must
 > follow when creating, updating, or closing GitHub Issues and Milestones on the
-> `VasilisPats/artisan-studio-showcase` repository. Feed this file to the agent at the
+> `VasilisPats/tattoo-studio-booking-prototype` repository. Feed this file to the agent at the
 > start of every new chat session to keep work organized and milestones on track.
 
 ---
@@ -12,7 +12,7 @@
 | Key | Value |
 |-----|-------|
 | **Owner** | `VasilisPats` |
-| **Repo** | `artisan-studio-showcase` |
+| **Repo** | `tattoo-studio-booking-prototype` |
 | **Default branch** | `main` |
 | **Tech stack** | Vite · React · TypeScript · Tailwind CSS · shadcn-ui |
 

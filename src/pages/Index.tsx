@@ -6,7 +6,6 @@ import Artists from "@/components/Artists";
 import Process from "@/components/Process";
 import Safety from "@/components/Safety";
 import Reviews from "@/components/Reviews";
-import BookingForm from "@/components/BookingForm";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 import SectionIndicator from "@/components/SectionIndicator";
@@ -22,7 +21,6 @@ const Index = () => {
       <Artists />
       <Safety />
       <Reviews />
-      <BookingForm />
       <Footer />
       <FloatingCTA />
       <SectionIndicator />

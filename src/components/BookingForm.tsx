@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, ChevronLeft, Check, Upload, X, Image } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
@@ -14,7 +14,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const TOTAL_FORM_STEPS = 5; // 0:Contact, 1:Date, 2:Idea+Photos, 3:Details, 4:Review
 
-const BookingForm = () => {
+interface BookingFormProps {
+  variant?: "default" | "hero";
+  className?: string;
+}
+
+const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) => {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
@@ -109,25 +114,31 @@ const BookingForm = () => {
   const selectCls = inputCls;
   const errorCls = "text-destructive text-xs mt-1";
 
+  const isHero = variant === "hero";
+
   if (submitted) {
+    const successContent = (
+      <div className={`${isHero ? "" : "max-w-2xl mx-auto"} text-center space-y-6`}>
+        <div className="w-20 h-20 mx-auto border border-primary flex items-center justify-center">
+          <Check className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="font-serif text-3xl text-foreground">{t.booking.successTitle}</h2>
+        <p className="text-muted-foreground">{t.booking.successMessage}</p>
+      </div>
+    );
+
+    if (isHero) return <div className={className}>{successContent}</div>;
+
     return (
       <section id="booking" className="py-32 px-6" ref={ref}>
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <div className="w-20 h-20 mx-auto border border-primary flex items-center justify-center">
-            <Check className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="font-serif text-3xl text-foreground">{t.booking.successTitle}</h2>
-          <p className="text-muted-foreground">{t.booking.successMessage}</p>
-        </div>
+        {successContent}
       </section>
     );
   }
 
-  return (
-    <section id="booking" className="py-32 px-6 relative overflow-hidden" ref={ref}>
-      <InkSplash variant={1} className="w-[450px] h-[450px] top-0 -right-24" speed={0.3} opacity={0.035} flip />
-      <InkSplash variant={3} className="w-[300px] h-[300px] -bottom-16 -left-16" speed={0.45} opacity={0.03} />
-      <div className="max-w-2xl mx-auto">
+  const formContent = (
+    <div className={isHero ? "" : "max-w-2xl mx-auto"}>
+      {!isHero && (
         <div
           className={`text-center mb-16 transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
@@ -138,27 +149,36 @@ const BookingForm = () => {
             {!quizComplete ? t.booking.quizPrompt : t.booking.formPrompt}
           </p>
         </div>
+      )}
 
-        {/* Quiz phase */}
-        {!quizComplete && (
-          <div className={`transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <StyleQuiz onComplete={handleQuizComplete} />
+      {/* Quiz phase */}
+      {!quizComplete && (
+        <div className={!isHero ? `transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` : ""}>
+          <StyleQuiz onComplete={handleQuizComplete} />
+        </div>
+      )}
+
+      {quizComplete && (
+        <>
+          {/* Progress */}
+          <div className={`flex items-center justify-center gap-2 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
+            {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
+              <div
+                key={s}
+                className={`h-0.5 w-10 transition-colors duration-300 ${s <= step ? "bg-primary" : "bg-border"}`}
+              />
+            ))}
           </div>
-        )}
 
-        {quizComplete && (
-          <>
-            {/* Progress */}
-            <div className="flex items-center justify-center gap-2 mb-12">
-              {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
-                <div
-                  key={s}
-                  className={`h-0.5 w-10 transition-colors duration-300 ${s <= step ? "bg-primary" : "bg-border"}`}
-                />
-              ))}
-            </div>
-
-            <div className={`transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <div className={!isHero ? `transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` : ""}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+              >
               {/* Step 0: Contact */}
               {step === 0 && (
                 <div className="space-y-6">
@@ -366,44 +386,62 @@ const BookingForm = () => {
                 </div>
               )}
 
-              {/* Navigation */}
-              <div className="flex justify-between mt-10">
-                {step > 0 || quizData ? (
-                  <motion.button
-                    onClick={prev}
-                    className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground transition-colors"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    <ChevronLeft size={16} /> {t.booking.back}
-                  </motion.button>
-                ) : <div />}
-                {step < TOTAL_FORM_STEPS - 1 ? (
-                  <motion.button
-                    onClick={next}
-                    className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    {t.booking.next} <ChevronRight size={16} />
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    onClick={submit}
-                    className="px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    {t.booking.submit}
-                  </motion.button>
-                )}
-              </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation */}
+            <div className={`flex justify-between ${isHero ? "mt-8" : "mt-10"}`}>
+              {step > 0 || quizData ? (
+                <motion.button
+                  onClick={prev}
+                  className="flex items-center gap-2 text-muted-foreground text-sm hover:text-foreground transition-colors"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <ChevronLeft size={16} /> {t.booking.back}
+                </motion.button>
+              ) : <div />}
+              {step < TOTAL_FORM_STEPS - 1 ? (
+                <motion.button
+                  onClick={next}
+                  className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  {t.booking.next} <ChevronRight size={16} />
+                </motion.button>
+              ) : (
+                <motion.button
+                  onClick={submit}
+                  className="px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  {t.booking.submit}
+                </motion.button>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  if (isHero) {
+    return (
+      <div className={`relative ${className}`}>
+        {formContent}
       </div>
+    );
+  }
+
+  return (
+    <section id="booking" className="py-32 px-6 relative overflow-hidden" ref={ref}>
+      <InkSplash variant={1} className="w-[450px] h-[450px] top-0 -right-24" speed={0.3} opacity={0.035} flip />
+      <InkSplash variant={3} className="w-[300px] h-[300px] -bottom-16 -left-16" speed={0.45} opacity={0.03} />
+      {formContent}
     </section>
   );
 };
