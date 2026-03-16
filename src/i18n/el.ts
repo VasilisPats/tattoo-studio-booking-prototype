@@ -169,6 +169,13 @@ export const el = {
         skipScheduling: "Θα προγραμματίσω αργότερα",
         successTitle: "Ευχαριστούμε!",
         successMessage: "Το αίτημά σας καταχωρήθηκε. Θα επικοινωνήσουμε μαζί σας εντός 48 ωρών.",
+        securingVision: "Εξασφάλιση του οράματός σας...",
+        successChecklist: {
+            ideaSaved: "Η ιδέα σας έχει αποθηκευτεί με ασφάλεια",
+            emailConfirm: "Ελέγξτε το email σας για επιβεβαίωση",
+            artistReady: "Ο καλλιτέχνης θα μελετήσει τις αναφορές σας πριν τη συνεδρία",
+        },
+        successClosing: "Είστε ένα βήμα πιο κοντά στο νέο σας tattoo.",
     },
     quiz: {
         styleTitle: "Τι στυλ σε εκφράζει;",

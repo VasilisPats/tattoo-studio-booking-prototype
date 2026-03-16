@@ -1,11 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, ChevronLeft, Check, Upload, X, Image, Loader2 } from "lucide-react";
-import { DayPicker } from "react-day-picker";
-import { format } from "date-fns";
-import { el as elLocale } from "date-fns/locale";
-import { enUS as enLocale } from "date-fns/locale";
-import "react-day-picker/dist/style.css";
 import { useScrollAnimation } from "./useScrollAnimation";
 import InkSplash from "./InkSplash";
 import TextReveal from "./TextReveal";
@@ -13,6 +8,7 @@ import StyleQuiz, { type QuizData } from "./quiz/StyleQuiz";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { InlineWidget, useCalendlyEventListener } from "react-calendly";
+import CalendlySkeleton from "./CalendlySkeleton";
 
 const TOTAL_FORM_STEPS = 5; // 0:Contact, 1:Idea+Photos, 2:Details, 3:Review, 4:Scheduling
 
@@ -35,6 +31,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [supabaseBookingId, setSupabaseBookingId] = useState<string | null>(null);
+  const [calendlyLoaded, setCalendlyLoaded] = useState(false);
   const { submitBooking, finalizeBooking, isSubmitting } = useBookingSubmit();
   const { ref, isVisible } = useScrollAnimation();
   const { t, language } = useLanguage();
@@ -101,16 +98,32 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
 
   // Calendly Event Listener
   useCalendlyEventListener({
+    onProfilePageViewed: () => setCalendlyLoaded(true),
+    onEventTypeViewed: () => setCalendlyLoaded(true),
+    onDateAndTimeSelected: () => setCalendlyLoaded(true),
     onEventScheduled: async (e) => {
       console.log("Calendly Event Scheduled:", e.data.payload);
+      // UX: Immediately transition to success screen
+      setSubmitted(true);
+      
+      // Sync with database in the background
       if (supabaseBookingId) {
-        const success = await finalizeBooking(supabaseBookingId, e.data.payload);
-        if (success) {
-          setSubmitted(true);
-        }
+        await finalizeBooking(supabaseBookingId, e.data.payload);
       }
     },
   });
+
+  // Abandonment protection
+  useEffect(() => {
+    if (step === 4 && !submitted) {
+      const handler = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = ''; // Trigger browser confirm
+      };
+      window.addEventListener('beforeunload', handler);
+      return () => window.removeEventListener('beforeunload', handler);
+    }
+  }, [step, submitted]);
 
   // File upload handlers
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,12 +156,73 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
 
   if (submitted) {
     const successContent = (
-      <div className={`${isHero ? "" : "max-w-2xl mx-auto"} text-center space-y-6`}>
-        <div className="w-20 h-20 mx-auto border border-primary flex items-center justify-center">
-          <Check className="w-10 h-10 text-primary" />
+      <div className={`${isHero ? "" : "max-w-2xl mx-auto"} text-center space-y-8 py-10`}>
+        <motion.div 
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          className="w-24 h-24 mx-auto border border-primary flex items-center justify-center relative"
+        >
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: "100%" }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="absolute left-0 top-0 w-[1px] bg-primary"
+          />
+          <Check className="w-12 h-12 text-primary" />
+        </motion.div>
+
+        <div className="space-y-4">
+          <motion.h2 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="font-serif text-3xl md:text-4xl text-foreground"
+          >
+            {t.booking.successTitle}
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground"
+          >
+            {t.booking.successMessage}
+          </motion.p>
         </div>
-        <h2 className="font-serif text-3xl text-foreground">{t.booking.successTitle}</h2>
-        <p className="text-muted-foreground">{t.booking.successMessage}</p>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-secondary/30 border border-border p-8 text-left max-w-md mx-auto space-y-4"
+        >
+          {[
+            t.booking.successChecklist.ideaSaved,
+            t.booking.successChecklist.emailConfirm,
+            t.booking.successChecklist.artistReady
+          ].map((item, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8 + (i * 0.1) }}
+              className="flex items-start gap-3"
+            >
+              <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <span className="text-sm text-foreground/80">{item}</span>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="text-primary/60 text-sm italic pt-4"
+        >
+          {t.booking.successClosing}
+        </motion.p>
       </div>
     );
 
@@ -375,38 +449,65 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
               {/* Step 4: Scheduling (Calendly) (Previously Step 5) */}
               {step === 4 && (
                     <div className="space-y-6">
-                      <div className="text-center space-y-2 mb-4">
+                      <div className="text-center space-y-2 mb-6">
                         <h3 className="font-serif text-2xl text-foreground">{t.booking.scheduleTitle || "Finalize Your Slot"}</h3>
                         <p className="text-sm text-muted-foreground">
                           {t.booking.scheduleSubtitle || "Your details are saved. Pick a specific time below to lock it in."}
                         </p>
                       </div>
                       
-                      <div className="calendly-container min-h-[400px] border border-border bg-secondary/20">
-                        <InlineWidget 
-                          url="https://calendly.com/your-calendly-link" // TODO: Add actual studio link
-                          prefill={{
-                            email: form.email,
-                            name: form.name,
-                          }}
-                          utm={{
-                            utmSource: "tattoo_studio_app",
-                            utmMedium: "booking_flow",
-                            utmCampaign: supabaseBookingId || "new_booking",
-                            utmContent: `${window.location.origin}/ref/${supabaseBookingId}`
-                          }}
-                          styles={{
-                            height: '600px'
-                          }}
-                        />
+                      <div className="calendly-container relative min-h-[600px] border border-border bg-secondary/10 overflow-hidden shadow-2xl shadow-primary/5 transition-all duration-500">
+                        <style>{`
+                          .calendly-container {
+                            animation: calendly-glow 3s ease-in-out infinite alternate;
+                          }
+                          @keyframes calendly-glow {
+                            from { border-color: hsl(var(--border) / 1); }
+                            to { border-color: hsl(var(--primary) / 0.4); }
+                          }
+                        `}</style>
+                        
+                        {!calendlyLoaded && (
+                          <div className="absolute inset-0 z-10 bg-background">
+                            <CalendlySkeleton />
+                          </div>
+                        )}
+
+                        <div className={`transition-opacity duration-700 ${calendlyLoaded ? 'opacity-100' : 'opacity-0'}`}>
+                          <InlineWidget 
+                            url={import.meta.env.VITE_CALENDLY_URL || "https://calendly.com/patsialasvasilis/new-meeting"}
+                            prefill={{
+                              email: form.email,
+                              name: form.name,
+                            }}
+                            pageSettings={{
+                              backgroundColor: '121212',
+                              hideEventTypeDetails: true,
+                              hideLandingPageDetails: true,
+                              primaryColor: 'c9a55a',
+                              textColor: 'f5f5f5',
+                            }}
+                            utm={{
+                              utmSource: "tattoo_studio_app",
+                              utmMedium: "booking_flow",
+                              utmCampaign: supabaseBookingId || "new_booking",
+                              utmContent: `${window.location.origin}/ref/${supabaseBookingId}`
+                            }}
+                            styles={{
+                              height: '600px'
+                            }}
+                          />
+                        </div>
                       </div>
                       
-                      <div className="text-center pt-4">
+                      <div className="text-center pt-6">
                         <button 
                           onClick={() => setSubmitted(true)}
-                          className="text-primary text-xs uppercase tracking-widest hover:underline"
+                          className="text-muted-foreground hover:text-primary text-xs uppercase tracking-widest transition-colors duration-300 flex items-center gap-2 mx-auto"
                         >
+                          <span className="w-12 h-px bg-border/50" />
                           {t.booking.skipScheduling || "I'll schedule later"}
+                          <span className="w-12 h-px bg-border/50" />
                         </button>
                       </div>
                     </div>
@@ -451,7 +552,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
+                        {t.booking.securingVision || "Securing your vision..."}
                       </>
                     ) : (
                       t.booking.submit

@@ -171,6 +171,13 @@ export const en: Translations = {
         skipScheduling: "I'll schedule later",
         successTitle: "Thank You!",
         successMessage: "Your request has been submitted. We will contact you within 48 hours.",
+        securingVision: "Securing your vision...",
+        successChecklist: {
+            ideaSaved: "Your tattoo idea is securely saved",
+            emailConfirm: "Check your email for confirmation",
+            artistReady: "Your artist will review your references before the session",
+        },
+        successClosing: "You're one step closer to your new ink.",
     },
     quiz: {
         styleTitle: "What style speaks to you?",

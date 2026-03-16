@@ -98,13 +98,22 @@ export const useBookingSubmit = () => {
     setError(null);
 
     try {
+      const updateData: Record<string, any> = {
+        status: 'scheduled',
+        calendly_event_uri: eventData?.event?.uri || null,
+        calendly_invitee_uri: eventData?.invitee?.uri || null,
+        calendly_payload: eventData
+      };
+
+      // Only set scheduled_at if the payload actually contains a start_time
+      // (possible on paid Calendly tiers)
+      if (eventData?.event?.start_time) {
+        updateData.scheduled_at = eventData.event.start_time;
+      }
+
       const { error: updateError } = await supabase
         .from('bookings')
-        .update({
-          status: 'scheduled',
-          scheduled_at: eventData.start_time,
-          calendly_payload: eventData
-        })
+        .update(updateData)
         .eq('id', bookingId);
 
       if (updateError) throw updateError;
