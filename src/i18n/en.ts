@@ -158,6 +158,7 @@ export const en: Translations = {
             placementRequired: "Please select a body placement",
             sizeRequired: "Please select a size",
             budgetRequired: "Please select a budget range",
+            gdprRequired: "You must consent to the privacy policy to continue",
         },
         placements: ["Arm", "Forearm", "Wrist", "Shoulder", "Back", "Chest", "Ribs", "Leg", "Ankle", "Neck", "Other"],
         sizes: ["Small (< 5cm)", "Medium (5-15cm)", "Large (15-30cm)", "Extra Large (30cm+)", "Full Sleeve"],
@@ -178,6 +179,7 @@ export const en: Translations = {
             artistReady: "Your artist will review your references before the session",
         },
         successClosing: "You're one step closer to your new ink.",
+        gdprLabel: "I consent to the collection and processing of my personal data for the purpose of scheduling a tattoo appointment and receiving project-related communications. (Privacy Policy)",
     },
     quiz: {
         styleTitle: "What style speaks to you?",
