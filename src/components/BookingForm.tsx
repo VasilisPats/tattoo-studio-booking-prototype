@@ -33,7 +33,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [supabaseBookingId, setSupabaseBookingId] = useState<string | null>(null);
   const [calendlyLoaded, setCalendlyLoaded] = useState(false);
-  const { submitBooking, finalizeBooking, softSave, isSubmitting } = useBookingSubmit();
+  const { submitBooking, finalizeBooking, softSave, isSubmitting, error: submitError } = useBookingSubmit();
   const { ref, isVisible } = useScrollAnimation();
   const { t, language } = useLanguage();
 
@@ -66,15 +66,13 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   const next = async () => { 
     if (validateStep()) {
       if (step === 0) {
-        // Soft Save lead data
-        const result = await softSave({
+        // Soft Save lead data - Non-blocking background call
+        softSave({
           ...form,
           gdpr_consented: gdprChecked
-        }, supabaseBookingId);
-        
-        if (result) {
-          setSupabaseBookingId(result.id);
-        }
+        }, supabaseBookingId).then(result => {
+          if (result) setSupabaseBookingId(result.id);
+        });
       }
       setStep((s) => s + 1); 
     } 
@@ -278,7 +276,19 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
 
       {quizComplete && (
         <>
-          {/* Progress */}
+          {/* Submission Error Banner */}
+      {submitError && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3 text-destructive"
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <p className="text-sm font-medium">{submitError}</p>
+        </motion.div>
+      )}
+
+      {/* Progress Stepper */}
           <div className={`flex items-center justify-center gap-2 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
             {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
               <div
