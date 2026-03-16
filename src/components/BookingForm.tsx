@@ -99,13 +99,16 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   // Calendly Event Listener
   useCalendlyEventListener({
     onProfilePageViewed: () => setCalendlyLoaded(true),
+    onEventTypeViewed: () => setCalendlyLoaded(true),
+    onDateAndTimeSelected: () => setCalendlyLoaded(true),
     onEventScheduled: async (e) => {
       console.log("Calendly Event Scheduled:", e.data.payload);
+      // UX: Immediately transition to success screen
+      setSubmitted(true);
+      
+      // Sync with database in the background
       if (supabaseBookingId) {
-        const success = await finalizeBooking(supabaseBookingId, e.data.payload);
-        if (success) {
-          setSubmitted(true);
-        }
+        await finalizeBooking(supabaseBookingId, e.data.payload);
       }
     },
   });
