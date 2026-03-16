@@ -29,10 +29,11 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     idea: "", placement: "", size: "", budget: "", artist: "",
     style: "",
   });
+  const [gdprChecked, setGdprChecked] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [supabaseBookingId, setSupabaseBookingId] = useState<string | null>(null);
   const [calendlyLoaded, setCalendlyLoaded] = useState(false);
-  const { submitBooking, finalizeBooking, isSubmitting } = useBookingSubmit();
+  const { submitBooking, finalizeBooking, softSave, isSubmitting } = useBookingSubmit();
   const { ref, isVisible } = useScrollAnimation();
   const { t, language } = useLanguage();
 
@@ -48,6 +49,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
       if (!form.email.trim()) errs.email = t.booking.errors.emailRequired;
       else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = t.booking.errors.emailInvalid;
       if (!form.phone.trim()) errs.phone = t.booking.errors.phoneRequired;
+      if (!gdprChecked) errs.gdpr = t.booking.errors.gdprRequired;
     }
     if (step === 1) {
       if (!form.idea.trim()) errs.idea = t.booking.errors.ideaRequired;
@@ -61,7 +63,22 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     return Object.keys(errs).length === 0;
   };
 
-  const next = () => { if (validateStep()) setStep((s) => s + 1); };
+  const next = async () => { 
+    if (validateStep()) {
+      if (step === 0) {
+        // Soft Save lead data
+        const result = await softSave({
+          ...form,
+          gdpr_consented: gdprChecked
+        }, supabaseBookingId);
+        
+        if (result) {
+          setSupabaseBookingId(result.id);
+        }
+      }
+      setStep((s) => s + 1); 
+    } 
+  };
   const prev = () => {
     if (step === 0) {
       setQuizComplete(false);
@@ -75,6 +92,8 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
     // Safety Save to Supabase
     const result = await submitBooking({
       ...form,
+      id: supabaseBookingId || undefined,
+      gdpr_consented: gdprChecked,
       quizData
     }, referenceImages);
 
@@ -293,6 +312,25 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                   <div>
                     <input className={inputCls} placeholder={t.booking.phonePlaceholder} value={form.phone} onChange={(e) => update("phone", e.target.value)} />
                     {errors.phone && <p className={errorCls}>{errors.phone}</p>}
+                  </div>
+
+                  {/* GDPR Consent */}
+                  <div className="flex items-start gap-3 pt-2">
+                    <div 
+                      onClick={() => setGdprChecked(!gdprChecked)}
+                      className={`mt-1 flex-shrink-0 w-5 h-5 border flex items-center justify-center cursor-pointer transition-colors duration-300 ${gdprChecked ? 'bg-primary border-primary' : 'bg-secondary border-border'}`}
+                    >
+                      {gdprChecked && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+                    </div>
+                    <div className="space-y-1">
+                      <p 
+                        onClick={() => setGdprChecked(!gdprChecked)}
+                        className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none"
+                      >
+                        {t.booking.gdprLabel}
+                      </p>
+                      {errors.gdpr && <p className={errorCls}>{errors.gdpr}</p>}
+                    </div>
                   </div>
                 </div>
               )}
