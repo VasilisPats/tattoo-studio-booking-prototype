@@ -140,12 +140,23 @@ export const useBookingSubmit = () => {
   const softSave = async (data: Partial<BookingData>, existingId?: string | null) => {
     // We don't set isSubmitting for softSave to avoid blocking the UI flow
     try {
+      const styleQuizData = {
+        ...(data.quizData || {}),
+        tattooIdea: data.idea || '',
+        size: data.size || '',
+        placement: data.placement || '',
+        budget: data.budget || '',
+        artistPreference: data.artist || '',
+        phoneNumber: data.phone || ''
+      };
+
       const payload = {
         full_name: data.name,
         email: data.email,
         phone: data.phone,
         gdpr_consented: data.gdpr_consented,
-        status: 'lead'
+        status: 'lead',
+        style_quiz_data: styleQuizData
       };
 
       if (existingId) {
@@ -168,7 +179,6 @@ export const useBookingSubmit = () => {
       }
     } catch (err: any) {
       console.error("Soft save error:", err);
-      // We fail silently for soft saves as they are non-critical optimizations
       return null;
     }
   };

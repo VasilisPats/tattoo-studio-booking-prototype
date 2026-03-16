@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, ChevronLeft, Check, Upload, X, Image, Loader2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Check, Upload, X, Image, Loader2, AlertCircle } from "lucide-react";
 import { useScrollAnimation } from "./useScrollAnimation";
 import InkSplash from "./InkSplash";
 import TextReveal from "./TextReveal";
