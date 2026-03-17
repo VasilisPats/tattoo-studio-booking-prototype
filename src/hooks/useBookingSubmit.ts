@@ -14,6 +14,8 @@ export interface BookingData {
   style: string;
   preferredDate?: Date;
   quizData?: QuizData | null;
+  gdpr_consented?: boolean;
+  id?: string;
 }
 
 export const useBookingSubmit = () => {
@@ -66,18 +68,26 @@ export const useBookingSubmit = () => {
         phoneNumber: data.phone
       };
 
-      // 3. Insert into Supabase
+      // 3. Update or Insert into Supabase
+      const insertData: any = {
+        full_name: data.name,
+        email: data.email,
+        phone: data.phone,
+        instagram_handle: '', // Future field
+        style_quiz_data: styleQuizData,
+        preferred_date: data.preferredDate?.toISOString(),
+        reference_images: imageUrls,
+        status: 'pending_scheduling',
+        gdpr_consented: data.gdpr_consented
+      };
+
+      if (data.id) {
+        insertData.id = data.id;
+      }
+
       const { data: record, error: insertError } = await supabase
         .from('bookings')
-        .insert({
-          full_name: data.name,
-          email: data.email,
-          instagram_handle: '', // Future field
-          style_quiz_data: styleQuizData,
-          preferred_date: data.preferredDate?.toISOString(),
-          reference_images: imageUrls,
-          status: 'pending_scheduling'
-        })
+        .upsert(insertData)
         .select()
         .single();
 
@@ -127,5 +137,51 @@ export const useBookingSubmit = () => {
     }
   };
 
-  return { submitBooking, finalizeBooking, isSubmitting, error };
+  const softSave = async (data: Partial<BookingData>, existingId?: string | null) => {
+    // We don't set isSubmitting for softSave to avoid blocking the UI flow
+    try {
+      const styleQuizData = {
+        ...(data.quizData || {}),
+        tattooIdea: data.idea || '',
+        size: data.size || '',
+        placement: data.placement || '',
+        budget: data.budget || '',
+        artistPreference: data.artist || '',
+        phoneNumber: data.phone || ''
+      };
+
+      const payload = {
+        full_name: data.name,
+        email: data.email,
+        phone: data.phone,
+        gdpr_consented: data.gdpr_consented,
+        status: 'lead',
+        style_quiz_data: styleQuizData
+      };
+
+      if (existingId) {
+        const { error: updateError } = await supabase
+          .from('bookings')
+          .update(payload)
+          .eq('id', existingId);
+        
+        if (updateError) throw updateError;
+        return { id: existingId };
+      } else {
+        const { data: record, error: insertError } = await supabase
+          .from('bookings')
+          .insert(payload)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return record;
+      }
+    } catch (err: any) {
+      console.error("Soft save error:", err);
+      return null;
+    }
+  };
+
+  return { submitBooking, finalizeBooking, softSave, isSubmitting, error };
 };

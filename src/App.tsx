@@ -9,7 +9,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { Analytics } from "@vercel/analytics/react";
 import LoadingScreen from "@/components/LoadingScreen";
-import InkCursor from "@/components/InkCursor";
 import Index from "./pages/Index";
 import ArtistGallery from "./pages/ArtistGallery";
 import NotFound from "./pages/NotFound";
@@ -37,7 +36,6 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <LanguageProvider>
           <TooltipProvider>
-            <InkCursor />
             <Toaster />
             <Sonner />
             <AnimatePresence mode="wait">
