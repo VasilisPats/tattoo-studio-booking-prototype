@@ -14,6 +14,7 @@ export interface QuizData {
 
 interface StyleQuizProps {
     onComplete: (data: QuizData) => void;
+    onStepChange?: (step: number) => void;
 }
 
 const TOTAL_STEPS = 3;
@@ -33,8 +34,8 @@ const slideVariants = {
     }),
 };
 
-const StyleQuiz = ({ onComplete }: StyleQuizProps) => {
-    const [step, setStep] = useState(0);
+const StyleQuiz = ({ onComplete, onStepChange, initialStep = 0 }: StyleQuizProps & { initialStep?: number }) => {
+    const [step, setStep] = useState(initialStep);
     const [direction, setDirection] = useState(1);
     const [quiz, setQuiz] = useState<QuizData>({
         style: "",
@@ -57,29 +58,22 @@ const StyleQuiz = ({ onComplete }: StyleQuizProps) => {
             return;
         }
         setDirection(1);
-        setStep((s) => s + 1);
+        const nextStep = step + 1;
+        setStep(nextStep);
+        if (onStepChange) onStepChange(nextStep);
     };
 
     const prev = () => {
         if (step === 0) return;
         setDirection(-1);
-        setStep((s) => s - 1);
+        const nextStep = step - 1;
+        setStep(nextStep);
+        if (onStepChange) onStepChange(nextStep);
     };
 
     return (
         <div className="space-y-8">
-            {/* Progress dots */}
-            <div className="flex items-center justify-center gap-2.5">
-                {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-                    <div
-                        key={i}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${i <= step
-                            ? "bg-primary scale-100"
-                            : "bg-border scale-75"
-                            }`}
-                    />
-                ))}
-            </div>
+            {/* Progress dots removed for unified tracking in parent */}
 
             {/* Step content with animation */}
             <div className="relative overflow-hidden min-h-[380px]">

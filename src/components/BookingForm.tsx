@@ -10,7 +10,9 @@ import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { InlineWidget, useCalendlyEventListener } from "react-calendly";
 import CalendlySkeleton from "./CalendlySkeleton";
 
-const TOTAL_FORM_STEPS = 5; // 1:Contact, 2:Idea+Photos, 3:Details, 4:Review, 5:Scheduling (Internal 0-4)
+const TOTAL_QUIZ_STEPS = 3;
+const TOTAL_BOOKING_STEPS = 5;
+const TOTAL_GLOBAL_STEPS = TOTAL_QUIZ_STEPS + TOTAL_BOOKING_STEPS;
 
 interface BookingFormProps {
   variant?: "default" | "hero";
@@ -21,6 +23,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [quizStep, setQuizStep] = useState(0);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +83,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
   const prev = () => {
     if (step === 0) {
       setQuizComplete(false);
+      setQuizStep(TOTAL_QUIZ_STEPS - 1);
       return;
     }
     setStep((s) => s - 1);
@@ -272,41 +276,50 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
         </div>
       )}
 
+      {/* Unified Progress Stepper */}
+      <div className={`flex flex-col items-center justify-center gap-4 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-primary/60 font-medium">
+          Step {!quizComplete ? quizStep + 1 : TOTAL_QUIZ_STEPS + step + 1} / {TOTAL_GLOBAL_STEPS}
+        </span>
+        <div className="flex items-center justify-center gap-2">
+          {Array.from({ length: TOTAL_GLOBAL_STEPS }).map((_, s) => {
+            const isActive = !quizComplete 
+              ? s <= quizStep 
+              : s <= (TOTAL_QUIZ_STEPS + step);
+            return (
+              <div
+                key={s}
+                className={`h-0.5 w-8 transition-colors duration-300 ${isActive ? "bg-primary" : "bg-border"}`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
       {/* Quiz phase */}
       {!quizComplete && (
         <div className={!isHero ? `transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` : ""}>
-          <StyleQuiz onComplete={handleQuizComplete} />
+          <StyleQuiz 
+            onComplete={handleQuizComplete} 
+            onStepChange={(s) => setQuizStep(s)} 
+            initialStep={quizStep}
+          />
         </div>
       )}
 
       {quizComplete && (
         <>
           {/* Submission Error Banner */}
-      {submitError && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3 text-destructive"
-        >
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p className="text-sm font-medium">{submitError}</p>
-        </motion.div>
-      )}
-
-          {/* Progress Stepper */}
-          <div className={`flex flex-col items-center justify-center gap-4 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-primary/60 font-medium">
-              Step {step + 1} / {TOTAL_FORM_STEPS}
-            </span>
-            <div className="flex items-center justify-center gap-2">
-              {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
-                <div
-                  key={s}
-                  className={`h-0.5 w-10 transition-colors duration-300 ${s <= step ? "bg-primary" : "bg-border"}`}
-                />
-              ))}
-            </div>
-          </div>
+          {submitError && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3 text-destructive"
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p className="text-sm font-medium">{submitError}</p>
+            </motion.div>
+          )}
 
           <div className={!isHero ? `transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` : ""}>
             <AnimatePresence mode="wait">
@@ -588,7 +601,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                     <ChevronLeft size={16} /> {t.booking.back}
                   </motion.button>
                 ) : <div />}
-                {step < TOTAL_FORM_STEPS - 2 ? (
+                {step < TOTAL_BOOKING_STEPS - 2 ? (
                   <motion.button
                     onClick={next}
                     className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-sm tracking-[0.1em] uppercase hover:opacity-90 transition-opacity"
