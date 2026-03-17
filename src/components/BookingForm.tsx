@@ -10,7 +10,7 @@ import { useBookingSubmit } from "@/hooks/useBookingSubmit";
 import { InlineWidget, useCalendlyEventListener } from "react-calendly";
 import CalendlySkeleton from "./CalendlySkeleton";
 
-const TOTAL_FORM_STEPS = 5; // 0:Contact, 1:Idea+Photos, 2:Details, 3:Review, 4:Scheduling
+const TOTAL_FORM_STEPS = 5; // 1:Contact, 2:Idea+Photos, 3:Details, 4:Review, 5:Scheduling (Internal 0-4)
 
 interface BookingFormProps {
   variant?: "default" | "hero";
@@ -132,10 +132,15 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
 
   // Abandonment protection
   useEffect(() => {
+    // Only trigger warning on the final scheduling step (Step 4) if not yet submitted
     if (step === 4 && !submitted) {
       const handler = (e: BeforeUnloadEvent) => {
+        // Note: Modern browsers ignore the custom string and show a generic message
+        // but we set it here for legacy support and clarity in our logic.
+        const message = "Don't lose your spot! You're only one step away from finishing your booking.";
         e.preventDefault();
-        e.returnValue = ''; // Trigger browser confirm
+        e.returnValue = message;
+        return message;
       };
       window.addEventListener('beforeunload', handler);
       return () => window.removeEventListener('beforeunload', handler);
@@ -288,14 +293,19 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
         </motion.div>
       )}
 
-      {/* Progress Stepper */}
-          <div className={`flex items-center justify-center gap-2 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
-            {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
-              <div
-                key={s}
-                className={`h-0.5 w-10 transition-colors duration-300 ${s <= step ? "bg-primary" : "bg-border"}`}
-              />
-            ))}
+          {/* Progress Stepper */}
+          <div className={`flex flex-col items-center justify-center gap-4 ${isHero ? "mb-8 scale-75 md:scale-90" : "mb-12"}`}>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-primary/60 font-medium">
+              Step {step + 1} / {TOTAL_FORM_STEPS}
+            </span>
+            <div className="flex items-center justify-center gap-2">
+              {Array.from({ length: TOTAL_FORM_STEPS }).map((_, s) => (
+                <div
+                  key={s}
+                  className={`h-0.5 w-10 transition-colors duration-300 ${s <= step ? "bg-primary" : "bg-border"}`}
+                />
+              ))}
+            </div>
           </div>
 
           <div className={!isHero ? `transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}` : ""}>
@@ -307,7 +317,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
               >
-              {/* Step 0: Contact */}
+              {/* Step 1: Contact (Internal index 0) */}
               {step === 0 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.contactTitle}</h3>
@@ -345,7 +355,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 1: Idea + Reference Photos (Previously Step 2) */}
+              {/* Step 2: Idea + Reference Photos (Internal index 1) */}
               {step === 1 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.ideaTitle}</h3>
@@ -418,7 +428,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 2: Details (Previously Step 3) */}
+              {/* Step 3: Details (Internal index 2) */}
               {step === 2 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.detailsTitle}</h3>
@@ -453,7 +463,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 3: Review (Previously Step 4) */}
+              {/* Step 4: Review (Internal index 3) */}
               {step === 3 && (
                 <div className="space-y-6">
                   <h3 className="font-serif text-xl text-foreground mb-6">{t.booking.reviewTitle}</h3>
@@ -494,7 +504,7 @@ const BookingForm = ({ variant = "default", className = "" }: BookingFormProps) 
                 </div>
               )}
 
-              {/* Step 4: Scheduling (Calendly) (Previously Step 5) */}
+              {/* Step 5: Scheduling (Calendly) (Internal index 4) */}
               {step === 4 && (
                     <div className="space-y-6">
                       <div className="text-center space-y-2 mb-6">
