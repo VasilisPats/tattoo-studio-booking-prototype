@@ -24,7 +24,7 @@
   - Captures Style Quiz + Tattoo Idea + Reference Images.
   - Saves as a `pending_scheduling` record in Supabase *before* the calendar step.
   - Generates a unique `booking_id`.
-- [ ] **Phase C: Calendly Synchronization (The Liquid Flow)**:
+- [x] **Phase C: Calendly Synchronization (The Liquid Flow)**:
   - **Remove Manual Date Picker**: Custom form focus is 100% on the project details.
   - **The Pass-Off**: Open Calendly Inline Widget with the `booking_id` passed as a hidden pre-fill value.
   - **Browser-Side Listener**: Use the Calendly Event Listener to detect successful booking confirmation without needing complex webhooks.
@@ -93,6 +93,20 @@
 - [x] **Mobile Strategy**: Headline -> Description -> CTA Button -> Form
 - [x] Ensure the CTA button acts as a trigger/focus to the form on small screens
 - [x] Optimize form layout to be full-width on mobile for better accessibility
+
+---
+
+## 8. Artist Admin Dashboard (Mission Control)
+
+**Core Concept**: A private, authenticated dashboard for the artist/studio owner. Instead of hunting through messy calendar apps or copy-pasting reference links, the artist has a single "mission control" page. The goal is to make managing bookings, viewing client secrets (like phone numbers for GDPR compliance), and preparing for tattoos completely frictionless.
+
+### Implementation Checklist
+- [ ] **Supabase Authentication**: Implement a secure login system (email/password) so only authorized artists can access the dashboard.
+- [ ] **Data Fetching & Security**: Create RLS (Row Level Security) policies so that bookings (especially sensitive contact info) are only visible to the authenticated artist.
+- [ ] **The "Bookings" View**: A clean table or card layout listing all leads and scheduled appointments, synced directly from Supabase.
+- [ ] **One-Click Magic**: Add a prominent "View Project" button on every booking that instantly opens the Artist Gallery (`/ref/:bookingId`), eliminating the need to click links from Calendly.
+- [ ] **Status Tagging**: Visually distinguish between "Leads" (Soft Saves who haven't picked a date) and "Scheduled" clients.
+- [ ] **Direct Actions**: Add quick action buttons to "Email" or "Call" the client directly from the dashboard view.
 
 ---
 
