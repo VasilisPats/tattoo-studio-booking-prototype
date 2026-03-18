@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Image, User, Mail, Calendar, Info, Instagram, ArrowLeft, Loader2, Maximize2 } from "lucide-react";
+import { Image, User, Mail, Calendar, Info, Instagram, ArrowLeft, Loader2, Maximize2, Phone, Clock } from "lucide-react";
 
 interface BookingRecord {
   id: string;
   created_at: string;
   full_name: string;
   email: string;
+  phone: string;
   instagram_handle: string;
   style_quiz_data: any;
   reference_images: string[];
+  scheduled_at: string | null;
   status: string;
 }
 
@@ -70,8 +72,12 @@ const ArtistGallery = () => {
             <h1 className="font-serif text-3xl tracking-tight">{booking.full_name}</h1>
             <div className="flex flex-wrap gap-4 text-xs font-medium text-gray-500 uppercase tracking-widest">
               <span className="flex items-center gap-1"><Mail size={12} /> {booking.email}</span>
+              <span className="flex items-center gap-1"><Phone size={12} /> {booking.phone}</span>
               {booking.instagram_handle && (
                 <span className="flex items-center gap-1"><Instagram size={12} /> {booking.instagram_handle}</span>
+              )}
+              {booking.scheduled_at && (
+                <span className="flex items-center gap-1 text-primary"><Calendar size={12} /> {new Date(booking.scheduled_at).toLocaleDateString()} at {new Date(booking.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               )}
             </div>
           </div>
