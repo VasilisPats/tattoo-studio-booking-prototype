@@ -230,8 +230,4 @@ export const en: Translations = {
         sunday: "Sunday: Closed",
         copyright: "© 2026 THE LIVING CANVAS. All rights reserved.",
     },
-    meta: {
-        title: "The Living Canvas — Premium Tattoo Studio",
-        description: "Book your session at The Living Canvas. Five top artists, clinical safety, and tattoos that tell your story.",
-    },
 };

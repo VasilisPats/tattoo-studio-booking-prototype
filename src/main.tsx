@@ -1,5 +1,3 @@
-// Sentry initialization — must be the very first import!
-import "./instrument";
 
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";

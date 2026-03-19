@@ -34,21 +34,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         } catch { }
     };
 
-    // Update <html lang> and meta tags when language changes
+    // Update <html lang> when language changes
     useEffect(() => {
         document.documentElement.lang = language;
-        const t = translations[language];
-
-        document.title = t.meta.title;
-
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute("content", t.meta.description);
-
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        if (ogTitle) ogTitle.setAttribute("content", t.meta.title);
-
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if (ogDesc) ogDesc.setAttribute("content", t.meta.description);
     }, [language]);
 
     return (

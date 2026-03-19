@@ -1,18 +1,16 @@
-import { useState, useEffect } from "react";
-import * as Sentry from "@sentry/react";
-import { AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";import { AnimatePresence } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index";
 import ArtistGallery from "./pages/ArtistGallery";
 import NotFound from "./pages/NotFound";
-import SentryDebugButton from "./components/SentryDebugButton";
 
 const queryClient = new QueryClient();
 
@@ -25,19 +23,13 @@ const App = () => {
   }, []);
 
   return (
-    <Sentry.ErrorBoundary
-      fallback={
-        <div style={{ padding: "2rem", textAlign: "center" }}>
-          <h2>Something went wrong.</h2>
-          <p>The error has been reported automatically. Please refresh the page.</p>
-        </div>
-      }
-    >
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
         <LanguageProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <ThemeToggle />
             <AnimatePresence mode="wait">
               {isLoading && <LoadingScreen onComplete={() => { }} />}
             </AnimatePresence>
@@ -51,10 +43,8 @@ const App = () => {
             </BrowserRouter>
           </TooltipProvider>
         </LanguageProvider>
-        <Analytics />
-        <SentryDebugButton />
-      </QueryClientProvider>
-    </Sentry.ErrorBoundary>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 

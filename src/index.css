@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Permanent+Marker&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=UnifrakturMaguntia&family=Oswald:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -49,6 +49,145 @@
     --sidebar-border: 0 0% 86%;
     --sidebar-ring: 0 0% 12%;
   }
+
+  .theme-punk {
+    --background: 0 0% 7%; /* Extra dark, #111 */
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 12%; 
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 0 100% 45%; /* Bloody neon red, #e60000 */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 40 100% 50%; /* High vis yellow */
+    --secondary-foreground: 0 0% 7%;
+    
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: 0 100% 45%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 98%; /* Harsh white borders for dark mode punk */
+    --input: 0 0% 20%;
+    --ring: 0 100% 45%;
+    
+    --radius: 0rem; /* Zero rounding for brutalism */
+    
+    --font-heading: 'Permanent Marker', cursive;
+    --font-body: 'Space Mono', monospace;
+  }
+
+  /* Force brutalist hard shadows on some elements in punk theme */
+  .theme-punk * {
+    box-shadow: none !important;
+  }
+  .theme-punk .shadow-lg, .theme-punk .shadow-md, .theme-punk .shadow-sm {
+    box-shadow: 4px 4px 0px 0px rgba(230, 0, 0, 1) !important; /* Thick red shadow block */
+  }
+  .theme-punk .shadow-xl {
+    box-shadow: 8px 8px 0px 0px rgba(255, 255, 255, 1) !important; /* Thick white shadow block */
+  }
+
+  .theme-minimalist {
+    --background: 40 33% 98%; /* Warm cream #FCFBF8 */
+    --foreground: 12 4% 17%; /* Deep Espresso #2E2B2A */
+    
+    --card: 40 33% 98%; 
+    --card-foreground: 12 4% 17%;
+    
+    --popover: 40 33% 98%;
+    --popover-foreground: 12 4% 17%;
+    
+    --primary: 30 33% 64%; /* Muted Soft Clay / Earth tone #C4A484 */
+    --primary-foreground: 40 33% 98%; /* Cream text on clay button */
+    
+    --secondary: 40 20% 90%; /* Soft beige secondary for hover */
+    --secondary-foreground: 12 4% 17%;
+    
+    --muted: 40 20% 90%;
+    --muted-foreground: 12 4% 40%;
+    
+    --accent: 30 33% 64%;
+    --accent-foreground: 40 33% 98%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 40 10% 88%; /* Very soft/thin borders */
+    --input: 40 20% 90%;
+    --ring: 30 33% 64%; /* Focus ring is clay */
+    
+    --radius: 1.5rem; /* Very rounded pill-shape corners instead of sharp */
+    
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  /* Force soft shadows and silky transitions on some elements in minimalist theme */
+  .theme-minimalist * {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* Silky smooth transitions */
+  }
+  .theme-minimalist .shadow-lg, .theme-minimalist .shadow-md, .theme-minimalist .shadow-sm, .theme-minimalist .shadow-xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05), 0 10px 20px -5px rgba(0, 0, 0, 0.02) !important; /* Soft luxury blurring */
+  }
+  
+  /* Additional massive whitespace injection */
+  .theme-minimalist section {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  .theme-occult {
+    --background: 0 0% 3%; /* Pitch black */
+    --foreground: 0 0% 95%; /* Crisp white */
+    
+    --card: 0 0% 3%; 
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 0 0% 95%; /* Pure white components */
+    --primary-foreground: 0 0% 3%; /* Black text inside white components */
+    
+    --secondary: 0 0% 15%; /* Deep grey */
+    --secondary-foreground: 0 0% 95%; 
+    
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 55%;
+    
+    --accent: 0 0% 95%; 
+    --accent-foreground: 0 0% 3%;
+    
+    --destructive: 0 0% 95%; 
+    --destructive-foreground: 0 0% 3%;
+    
+    --border: 0 0% 30%; /* Crisp grey border outlines */
+    --input: 0 0% 8%;
+    --ring: 0 0% 95%; /* White focus */
+    
+    --radius: 0rem; /* ZERO blocky edges */
+    
+    --font-heading: 'UnifrakturMaguntia', cursive;
+    --font-body: 'Oswald', sans-serif;
+  }
+
+  /* Extreme high-contrast hard snapping and sharp edges */
+  .theme-occult * {
+    transition: none !important; /* No smooth fading, instant brutal snap */
+  }
+  .theme-occult button:hover, .theme-occult [role="button"]:hover, .theme-occult a:hover {
+    box-shadow: 2px 2px 0px 0px rgba(255, 255, 255, 1) !important; /* High contrast bright white offset block on hover */
+    transform: translate(-1px, -1px);
+  }
 }
 
 @layer base {
@@ -58,7 +197,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body, 'DM Sans', sans-serif);
   }
 
   h1,
@@ -67,7 +206,7 @@
   h4,
   h5,
   h6 {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--font-heading, 'Cormorant Garamond', serif);
   }
 }
 

@@ -228,10 +228,6 @@ export const el = {
         sunday: "Κυριακή: Κλειστά",
         copyright: "© 2026 THE LIVING CANVAS. Με επιφύλαξη παντός δικαιώματος.",
     },
-    meta: {
-        title: "The Living Canvas — Premium Tattoo Studio",
-        description: "Κλείσε τη συνεδρία σου στο The Living Canvas. Πέντε κορυφαίοι καλλιτέχνες, κλινική ασφάλεια, και τατουάζ που αφηγούνται τη δική σου ιστορία.",
-    },
 };
 
 export type Translations = typeof el;
